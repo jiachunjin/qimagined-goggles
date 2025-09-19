@@ -5,6 +5,28 @@ import torch
 from diffusers import QwenImagePipeline
 from transformers import AutoTokenizer, AutoProcessor
 
+def load_models(
+    device         = "cuda:0",
+    dtype          = torch.bfloat16,
+    tokenizer_only = False,
+):
+    tokenizer = AutoTokenizer.from_pretrained("/data/phd/jinjiachun/ckpt/Qwen/Qwen-Image/tokenizer")
+    processor = AutoProcessor.from_pretrained("Qwen/Qwen2.5-VL-7B-Instruct")
+    if tokenizer_only:
+        return tokenizer, processor
+    else:
+        pipe = QwenImagePipeline.from_pretrained("/data/phd/jinjiachun/ckpt/Qwen/Qwen-Image", torch_dtype=torch.bfloat16)
+        pipe = pipe.to(device)
+        qwenvl = pipe.text_encoder
+
+        return tokenizer, processor, pipe, qwenvl
+
+def encode(
+    prompt,
+):
+
+
+
 device = torch.device("cuda:6")
 dtype = torch.bfloat16
 
