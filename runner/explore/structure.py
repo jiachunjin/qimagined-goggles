@@ -15,6 +15,7 @@ def text_encode_bsz_1():
     template = "<|im_start|>system\nDescribe the image by detailing the color, shape, size, texture, quantity, text, spatial relationships of the objects and background:<|im_end|>\n<|im_start|>user\n{}<|im_end|>\n<|im_start|>assistant\n"
     formatted_prompt = [template.format(e) for e in prompt]
     print(formatted_prompt)
+    drop_idx = 34
 
     txt_tokens = tokenizer(
         formatted_prompt, max_length=512, padding=True, truncation=True, return_tensors="pt"
