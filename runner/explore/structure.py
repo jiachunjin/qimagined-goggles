@@ -2,11 +2,12 @@ import torch
 from transformers import Qwen2_5_VLForConditionalGeneration, AutoTokenizer
 
 
-def text_encode():
+def text_encode(text_encoder=None):
     device = torch.device("cuda:0")
     dtype = torch.bfloat16
     # ---------- load text encoder ----------
-    text_encoder = Qwen2_5_VLForConditionalGeneration.from_pretrained("/data/phd/jinjiachun/ckpt/Qwen/Qwen-Image/text_encoder")
+    if text_encoder is None:
+        text_encoder = Qwen2_5_VLForConditionalGeneration.from_pretrained("/data/phd/jinjiachun/ckpt/Qwen/Qwen-Image/text_encoder")
     tokenizer = AutoTokenizer.from_pretrained("/data/phd/jinjiachun/ckpt/Qwen/Qwen-Image/tokenizer")
     text_encoder = text_encoder.to(device, dtype).eval()
 
@@ -49,13 +50,13 @@ def complete_pipeline():
     pipe = QwenImagePipeline.from_pretrained("/data/phd/jinjiachun/ckpt/Qwen/Qwen-Image", torch_dtype=dtype)
     pipe = pipe.to(device)
 
-    chosen_hidden_states, chosen_mask = text_encode()
+    chosen_hidden_states, chosen_mask = text_encode(pipe.text_encoder)
 
     image = pipe(
-        prompt_embeds               = chosen_hidden_states[0],
-        prompt_embeds_mask          = chosen_mask[0],
-        negative_prompt_embeds      = chosen_hidden_states[1],
-        negative_prompt_embeds_mask = chosen_mask[1],
+        prompt_embeds               = chosen_hidden_states[0].unsqueeze(0),
+        prompt_embeds_mask          = chosen_mask[0].unsqueeze(0),
+        negative_prompt_embeds      = chosen_hidden_states[1].unsqueeze(0),
+        negative_prompt_embeds_mask = chosen_mask[1].unsqueeze(0),
         true_cfg_scale              = 5.0,
         num_inference_steps         = 50,
         height                      = 1024,
