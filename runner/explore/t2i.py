@@ -37,6 +37,8 @@ hidden_states = encoder_hidden_states.hidden_states[-1]
 prompt_embeds = hidden_states
 prompt_embeds_mask = prompt_tokens.attention_mask
 
+print(prompt_embeds.shape, prompt_embeds_mask.shape)
+
 # ---------- call mmdit ----------
 image = pipe(
     prompt_embeds       = prompt_embeds,
