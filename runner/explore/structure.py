@@ -50,27 +50,19 @@ def complete_pipeline():
     pipe = QwenImagePipeline.from_pretrained("/data/phd/jinjiachun/ckpt/Qwen/Qwen-Image", torch_dtype=dtype)
     pipe = pipe.to(device)
 
-    chosen_hidden_states, chosen_mask = text_encode(pipe.text_encoder)
+    # chosen_hidden_states, chosen_mask = text_encode(pipe.text_encoder)
 
     prompt = ["生成一张祝小明生日快乐的贺卡"]
     prompt_neg = [" "]
 
-    prompt_embeds, prompt_embeds_mask = pipe.encode_prompt(
+    prompt_embeds, prompt_embeds_mask = pipe._get_qwen_prompt_embeds(
         prompt                = prompt,
-        prompt_embeds         = None,
-        prompt_embeds_mask    = None,
         device                = device,
-        num_images_per_prompt = 1,
-        max_sequence_length   = 512,
     )
 
-    prompt_embeds_neg, prompt_embeds_mask_neg = pipe.encode_prompt(
+    prompt_embeds_neg, prompt_embeds_mask_neg = pipe._get_qwen_prompt_embeds(
         prompt                = prompt_neg,
-        prompt_embeds         = None,
-        prompt_embeds_mask    = None,
         device                = device,
-        num_images_per_prompt = 1,
-        max_sequence_length   = 512,
     )
 
     # print(chosen_hidden_states.shape, prompt_embeds.shape)
