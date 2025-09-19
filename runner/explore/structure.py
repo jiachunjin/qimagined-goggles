@@ -41,6 +41,28 @@ def text_encode(text_encoder=None):
 
     return chosen_hidden_states, chosen_mask
 
+def encode(prompt, qwenvl):
+    tokenizer = AutoTokenizer.from_pretrained("/data/phd/jinjiachun/ckpt/Qwen/Qwen-Image/tokenizer")
+    device = qwenvl.device
+    template = "<|im_start|>system\nDescribe the image by detailing the color, shape, size, texture, quantity, text, spatial relationships of the objects and background:<|im_end|>\n<|im_start|>user\n{}<|im_end|>\n<|im_start|>assistant\n"
+    formatted_prompt = [template.format(e) for e in prompt]
+    drop_idx = 34
+    txt_tokens = tokenizer(
+        formatted_prompt, max_length=512, padding=True, truncation=True, return_tensors="pt"
+    ).to(device)
+
+    encoder_hidden_states = qwenvl(
+        input_ids            = txt_tokens.input_ids,
+        attention_mask       = txt_tokens.attention_mask,
+        output_hidden_states = True,
+    )
+    hidden_states = encoder_hidden_states.hidden_states[-1]
+
+    chosen_hidden_states = hidden_states[:, drop_idx:]
+    chosen_mask = txt_tokens.attention_mask[:, drop_idx:]
+
+    return chosen_hidden_states, chosen_mask
+
 def complete_pipeline():
     device = torch.device("cuda:0")
     dtype = torch.bfloat16
@@ -55,10 +77,7 @@ def complete_pipeline():
     prompt = ["生成一张祝小明生日快乐的贺卡"]
     prompt_neg = [" "]
 
-    prompt_embeds, prompt_embeds_mask = pipe._get_qwen_prompt_embeds(
-        prompt                = prompt,
-        device                = device,
-    )
+    prompt_embeds, prompt_embeds_mask = encode(prompt, pipe.text_encoder)
 
     prompt_embeds_neg, prompt_embeds_mask_neg = pipe._get_qwen_prompt_embeds(
         prompt                = prompt_neg,
@@ -73,9 +92,9 @@ def complete_pipeline():
         negative_prompt_embeds      = prompt_embeds_neg,
         negative_prompt_embeds_mask = prompt_embeds_mask_neg,
         true_cfg_scale              = 5.0,
-        num_inference_steps         = 50,
-        height                      = 1024,
-        width                       = 1024,
+        num_inference_steps         = 10,
+        height                      = 512,
+        width                       = 512,
     ).images[0]
 
     image.save("generation_structure.png")
