@@ -65,5 +65,5 @@ def complete_pipeline():
     image.save("generation_structure.png")
 
 if __name__ == "__main__":
-    text_encode()
+    complete_pipeline()
     
