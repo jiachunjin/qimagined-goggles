@@ -33,7 +33,7 @@ def text_encode_bsz_1():
     print(hidden_states.shape)
 
     chosen_hidden_states = [e[drop_idx:] for e in hidden_states]
-    print(chosen_hidden_states.shape)
+    print(chosen_hidden_states)
     
 
     
