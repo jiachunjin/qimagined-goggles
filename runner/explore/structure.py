@@ -52,18 +52,31 @@ def complete_pipeline():
 
     chosen_hidden_states, chosen_mask = text_encode(pipe.text_encoder)
 
-    image = pipe(
-        prompt_embeds               = chosen_hidden_states[0].unsqueeze(0),
-        prompt_embeds_mask          = chosen_mask[0].unsqueeze(0),
-        negative_prompt_embeds      = chosen_hidden_states[1].unsqueeze(0),
-        negative_prompt_embeds_mask = chosen_mask[1].unsqueeze(0),
-        true_cfg_scale              = 5.0,
-        num_inference_steps         = 50,
-        height                      = 1024,
-        width                       = 1024,
-    ).images[0]
+    prompt = ["生成一张祝小明生日快乐的贺卡", " "]
 
-    image.save("generation_structure.png")
+    prompt_embeds, prompt_embeds_mask = pipe.encode_prompt(
+        prompt                = prompt,
+        prompt_embeds         = None,
+        prompt_embeds_mask    = None,
+        device                = device,
+        num_images_per_prompt = 1,
+        max_sequence_length   = 512,
+    )
+
+    print(chosen_hidden_states.shape, prompt_embeds.shape)
+
+    # image = pipe(
+    #     prompt_embeds               = chosen_hidden_states[0].unsqueeze(0),
+    #     prompt_embeds_mask          = chosen_mask[0].unsqueeze(0),
+    #     negative_prompt_embeds      = chosen_hidden_states[1].unsqueeze(0),
+    #     negative_prompt_embeds_mask = chosen_mask[1].unsqueeze(0),
+    #     true_cfg_scale              = 5.0,
+    #     num_inference_steps         = 50,
+    #     height                      = 1024,
+    #     width                       = 1024,
+    # ).images[0]
+
+    # image.save("generation_structure.png")
 
 if __name__ == "__main__":
     complete_pipeline()
