@@ -50,7 +50,7 @@ def edit_with_thinking():
         prompt = input("请输入prompt: ")
         img_path = input("img path:")
         try:
-            image = Image.open(img_path).convert("RGB")
+            image_raw = Image.open(img_path).convert("RGB")
         except Exception:
             print("加载图片出错，重新加载")
             continue
