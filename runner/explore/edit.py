@@ -131,4 +131,7 @@ def edit_with_thinking():
         output_image.save(f"edit_{prompt}.png")
 
 if __name__ == "__main__":
-    edit_with_pipeline()
+    edit_with_thinking()
+
+# 把白板上的字翻译成英文
+# /data/phd/jinjiachun/codebase/qimagined-goggles/asset/whiteboard.png
