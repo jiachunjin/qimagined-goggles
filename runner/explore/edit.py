@@ -1,5 +1,7 @@
 import torch
 import os
+import time
+import random
 from PIL import Image
 from diffusers import QwenImageEditPipeline
 
@@ -79,6 +81,17 @@ def edit_with_thinking():
         ).to(device)
 
         # ----- continue the generation -----
+        # 使用动态随机种子和更多随机性参数
+        random_seed = int(time.time() * 1000) % 2**32
+        torch.manual_seed(random_seed)
+        
+        # 随机化生成参数以增加多样性
+        temperature = random.uniform(1.0, 1.5)  # 随机温度
+        top_p = random.uniform(0.8, 0.95)       # 随机top_p
+        top_k = random.randint(40, 80)          # 随机top_k
+        
+        print(f"使用随机参数 - 种子: {random_seed}, 温度: {temperature:.2f}, top_p: {top_p:.2f}, top_k: {top_k}")
+        
         generation_output = pipeline.text_encoder.generate(
             **model_inputs,
             max_new_tokens=512,
@@ -86,6 +99,10 @@ def edit_with_thinking():
             return_dict_in_generate=True,
             output_scores=True,
             do_sample=True,
+            temperature=temperature,  # 随机温度提高随机性
+            top_p=top_p,             # 随机核采样参数
+            top_k=top_k,             # 随机候选词数量
+            repetition_penalty=1.1,  # 重复惩罚
         )
         generated_ids = generation_output.sequences
         all_hidden_states = generation_output.hidden_states
