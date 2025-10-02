@@ -45,12 +45,16 @@ def encode(prompt, qwenvl):
     tokenizer = AutoTokenizer.from_pretrained("/data/phd/jinjiachun/ckpt/Qwen/Qwen-Image/tokenizer")
     device = qwenvl.device
     template = "<|im_start|>system\nDescribe the image by detailing the color, shape, size, texture, quantity, text, spatial relationships of the objects and background:<|im_end|>\n<|im_start|>user\n{}<|im_end|>\n<|im_start|>assistant\n"
-    formatted_prompt = [template.format(e) for e in prompt]
     drop_idx = 34
+    # template = "<|im_start|>system\nGeneration an image:<|im_end|>\n<|im_start|>user\n{}<|im_end|>\n<|im_start|>assistant\n"
+    # drop_idx = 12
+    formatted_prompt = [template.format(e) for e in prompt]
+    
     txt_tokens = tokenizer(
         formatted_prompt, max_length=512, padding=True, truncation=True, return_tensors="pt"
     ).to(device)
 
+    # print(txt_tokens.attention_mask)
     encoder_hidden_states = qwenvl(
         input_ids            = txt_tokens.input_ids,
         attention_mask       = txt_tokens.attention_mask,
@@ -92,13 +96,37 @@ def complete_pipeline():
         negative_prompt_embeds      = prompt_embeds_neg,
         negative_prompt_embeds_mask = prompt_embeds_mask_neg,
         true_cfg_scale              = 5.0,
-        num_inference_steps         = 10,
-        height                      = 512,
-        width                       = 512,
+        num_inference_steps         = 50,
+        height                      = 1024,
+        width                       = 1024,
     ).images[0]
 
     image.save("generation_structure.png")
 
+def generate_wise_images():
+    import os
+    import json
+    from diffusers import QwenImagePipeline
+
+    device = torch.device("cuda:0")
+    dtype = torch.bfloat16
+
+    # pipe = QwenImagePipeline.from_pretrained("/data/phd/jinjiachun/ckpt/Qwen/Qwen-Image", torch_dtype=dtype)
+    # pipe = pipe.to(device)
+
+    # load json file
+    json_path = "/data/phd/jinjiachun/codebase/WISE/data"
+    json_file_names = ["cultural_common_sense.json", "natural_science.json", "spatio-temporal_reasoning.json"]
+    for json_file_name in json_file_names:
+        with open(os.path.join(json_path, json_file_name), "r") as f:
+            data = json.load(f)
+        for item in data:
+            prompt = item["Prompt"]
+            prompt_id = item["prompt_id"]
+            print(prompt_id, prompt)
+            # image = pipe(prompt)
+            # image.save(os.path.join(json_path, json_file_name.replace(".json", ".png")))
+
+
 if __name__ == "__main__":
-    complete_pipeline()
-    
+    generate_wise_images()
