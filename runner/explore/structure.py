@@ -111,8 +111,8 @@ def generate_wise_images():
     device = torch.device("cuda:0")
     dtype = torch.bfloat16
 
-    # pipe = QwenImagePipeline.from_pretrained("/data/phd/jinjiachun/ckpt/Qwen/Qwen-Image", torch_dtype=dtype)
-    # pipe = pipe.to(device)
+    pipe = QwenImagePipeline.from_pretrained("/data/phd/jinjiachun/ckpt/Qwen/Qwen-Image", torch_dtype=dtype)
+    pipe = pipe.to(device)
 
     # load json file
     json_path = "/data/phd/jinjiachun/codebase/WISE/data"
@@ -122,8 +122,29 @@ def generate_wise_images():
             data = json.load(f)
         for item in data:
             prompt = item["Prompt"]
+            prompt_neg = [" "]
             prompt_id = item["prompt_id"]
             print(prompt_id, prompt)
+
+            prompt_embeds, prompt_embeds_mask = encode(prompt, pipe.text_encoder)
+
+            prompt_embeds_neg, prompt_embeds_mask_neg = pipe._get_qwen_prompt_embeds(
+                prompt                = prompt_neg,
+                device                = device,
+            )
+
+            image = pipe(
+                prompt_embeds               = prompt_embeds,
+                prompt_embeds_mask          = prompt_embeds_mask,
+                negative_prompt_embeds      = prompt_embeds_neg,
+                negative_prompt_embeds_mask = prompt_embeds_mask_neg,
+                true_cfg_scale              = 5.0,
+                num_inference_steps         = 50,
+                height                      = 1024,
+                width                       = 1024,
+            ).images[0]
+
+            image.save(f"/data/phd/jinjiachun/codebase/qimagined-goggles/asset/wise_generation/{prompt_id}.png")
             # image = pipe(prompt)
             # image.save(os.path.join(json_path, json_file_name.replace(".json", ".png")))
 
