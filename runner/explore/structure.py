@@ -103,6 +103,7 @@ def complete_pipeline():
 
     image.save("generation_structure.png")
 
+@torch.no_grad()
 def generate_wise_images():
     import os
     import json
@@ -117,37 +118,37 @@ def generate_wise_images():
     # load json file
     json_path = "/data/phd/jinjiachun/codebase/WISE/data"
     json_file_names = ["cultural_common_sense.json", "natural_science.json", "spatio-temporal_reasoning.json"]
+    prompt_dict = {}
     for json_file_name in json_file_names:
         with open(os.path.join(json_path, json_file_name), "r") as f:
             data = json.load(f)
-        for item in data:
-            prompt = item["Prompt"]
-            prompt_neg = [" "]
-            prompt_id = item["prompt_id"]
-            print(prompt_id, prompt)
+            for item in data:
+                prompt = item["Prompt"]
+                prompt_id = item["prompt_id"]
+                prompt_dict[prompt_id] = prompt
+    
+    for prompt_id, prompt in prompt_dict.items():
+        prompt_embeds, prompt_embeds_mask = encode(prompt, pipe.text_encoder)
+        prompt_neg = [" "]
+        prompt_embeds_neg, prompt_embeds_mask_neg = pipe._get_qwen_prompt_embeds(
+            prompt                = prompt_neg,
+            device                = device,
+        )
 
-            prompt_embeds, prompt_embeds_mask = encode(prompt, pipe.text_encoder)
+        image = pipe(
+            prompt_embeds               = prompt_embeds,
+            prompt_embeds_mask          = prompt_embeds_mask,
+            negative_prompt_embeds      = prompt_embeds_neg,
+            negative_prompt_embeds_mask = prompt_embeds_mask_neg,
+            true_cfg_scale              = 5.0,
+            num_inference_steps         = 50,
+            height                      = 1024,
+            width                       = 1024,
+        ).images[0]
 
-            prompt_embeds_neg, prompt_embeds_mask_neg = pipe._get_qwen_prompt_embeds(
-                prompt                = prompt_neg,
-                device                = device,
-            )
-
-            image = pipe(
-                prompt_embeds               = prompt_embeds,
-                prompt_embeds_mask          = prompt_embeds_mask,
-                negative_prompt_embeds      = prompt_embeds_neg,
-                negative_prompt_embeds_mask = prompt_embeds_mask_neg,
-                true_cfg_scale              = 5.0,
-                num_inference_steps         = 50,
-                height                      = 1024,
-                width                       = 1024,
-            ).images[0]
-
-            image.save(f"/data/phd/jinjiachun/codebase/qimagined-goggles/asset/wise_generation/{prompt_id}.png")
-            # image = pipe(prompt)
-            # image.save(os.path.join(json_path, json_file_name.replace(".json", ".png")))
+        image.save(f"/data/phd/jinjiachun/codebase/qimagined-goggles/asset/wise_generation/{prompt_id}.png")
 
 
 if __name__ == "__main__":
     generate_wise_images()
+    # complete_pipeline()
