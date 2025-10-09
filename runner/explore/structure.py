@@ -162,8 +162,15 @@ def generate_wise_images():
 def generate_wise_images_qwen_max_generation():
     import os
     import json
+    from diffusers import QwenImagePipeline
 
-    path = "/Users/orres/Playground/qimage/data"
+    device = torch.device("cuda:0")
+    dtype = torch.bfloat16
+
+    pipe = QwenImagePipeline.from_pretrained("/data/phd/jinjiachun/ckpt/Qwen/Qwen-Image", torch_dtype=dtype)
+    pipe = pipe.to(device, dtype)
+
+    path = "/data/phd/jinjiachun/codebase/qimagined-goggles/data"
     json_file_names = ["culture.jsonl", "spatio.jsonl", "science.jsonl"]
 
     idx = 1
@@ -174,11 +181,31 @@ def generate_wise_images_qwen_max_generation():
             for line in f:
                 data = json.loads(line)
                 response = data["response"]["body"]["choices"][0]["message"]["content"]
-                response = response.split("{")[1].split("}")[0]
-                print(idx, response)
+                prompt = response.split("{")[1].split("}")[0]
+                prompt_neg = [" "]
+                print(idx, prompt)
                 idx += 1
 
-    pass
+                prompt_embeds, prompt_embeds_mask = encode([prompt], pipe.text_encoder)
+
+                prompt_embeds_neg, prompt_embeds_mask_neg = pipe._get_qwen_prompt_embeds(
+                    prompt                = prompt_neg,
+                    device                = device,
+                )
+
+                image = pipe(
+                    prompt_embeds               = prompt_embeds,
+                    prompt_embeds_mask          = prompt_embeds_mask,
+                    negative_prompt_embeds      = prompt_embeds_neg,
+                    negative_prompt_embeds_mask = prompt_embeds_mask_neg,
+                    true_cfg_scale              = 5.0,
+                    num_inference_steps         = 50,
+                    height                      = 512,
+                    width                       = 512,
+                ).images[0]
+
+                image.save(f"/data/phd/jinjiachun/codebase/qimagined-goggles/asset/wise_generation_rewrite_qwen_max/{idx}.png")
+
 
 if __name__ == "__main__":
     generate_wise_images_qwen_max_generation()
