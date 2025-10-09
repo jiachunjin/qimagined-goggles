@@ -113,10 +113,10 @@ def generate_wise_images():
     accelerator = Accelerator()
 
     # device = torch.device("cuda:0")
-    # dtype = torch.bfloat16
+    dtype = torch.bfloat16
 
-    # pipe = QwenImagePipeline.from_pretrained("/data/phd/jinjiachun/ckpt/Qwen/Qwen-Image", torch_dtype=dtype)
-    # pipe = pipe.to(device)
+    pipe = QwenImagePipeline.from_pretrained("/data/phd/jinjiachun/ckpt/Qwen/Qwen-Image", torch_dtype=dtype)
+    pipe = pipe.to(accelerator.device, dtype)
 
     # load json file
     json_path = "/data/phd/jinjiachun/codebase/WISE/data"
@@ -136,29 +136,51 @@ def generate_wise_images():
                 prompt_neg = [" "]
                 prompt_id = item["prompt_id"]
                 print(prompt_id, prompt)
-            exit(0)
 
-                # prompt_embeds, prompt_embeds_mask = encode([prompt], pipe.text_encoder)
+                prompt_embeds, prompt_embeds_mask = encode([prompt], pipe.text_encoder)
 
-                # prompt_embeds_neg, prompt_embeds_mask_neg = pipe._get_qwen_prompt_embeds(
-                #     prompt                = prompt_neg,
-                #     device                = device,
-                # )
+                prompt_embeds_neg, prompt_embeds_mask_neg = pipe._get_qwen_prompt_embeds(
+                    prompt                = prompt_neg,
+                    device                = accelerator.device,
+                )
 
-                # image = pipe(
-                #     prompt_embeds               = prompt_embeds,
-                #     prompt_embeds_mask          = prompt_embeds_mask,
-                #     negative_prompt_embeds      = prompt_embeds_neg,
-                #     negative_prompt_embeds_mask = prompt_embeds_mask_neg,
-                #     true_cfg_scale              = 5.0,
-                #     num_inference_steps         = 50,
-                #     height                      = 512,
-                #     width                       = 512,
-                # ).images[0]
+                image = pipe(
+                    prompt_embeds               = prompt_embeds,
+                    prompt_embeds_mask          = prompt_embeds_mask,
+                    negative_prompt_embeds      = prompt_embeds_neg,
+                    negative_prompt_embeds_mask = prompt_embeds_mask_neg,
+                    true_cfg_scale              = 5.0,
+                    num_inference_steps         = 50,
+                    height                      = 512,
+                    width                       = 512,
+                ).images[0]
 
-                # image.save(f"/data/phd/jinjiachun/codebase/qimagined-goggles/asset/wise_generation/{prompt_id}.png")
+                image.save(f"/data/phd/jinjiachun/codebase/qimagined-goggles/asset/wise_generation_rewrite/{prompt_id}.png")
 
+
+@torch.no_grad()
+def generate_wise_images_qwen_max_generation():
+    import os
+    import json
+
+    path = "/Users/orres/Playground/qimage/data"
+    json_file_names = ["culture.jsonl", "spatio.jsonl", "science.jsonl"]
+
+    idx = 1
+
+    for json_file_name in json_file_names:
+        file_path = os.path.join(path, json_file_name)
+        with open(file_path, "r") as f:
+            for line in f:
+                data = json.loads(line)
+                response = data["response"]["body"]["choices"][0]["message"]["content"]
+                response = response.split("{")[1].split("}")[0]
+                print(idx, response)
+                idx += 1
+
+    pass
 
 if __name__ == "__main__":
-    generate_wise_images()
+    generate_wise_images_qwen_max_generation()
+    # generate_wise_images()
     # complete_pipeline()
