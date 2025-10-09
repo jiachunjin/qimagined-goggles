@@ -108,45 +108,55 @@ def generate_wise_images():
     import os
     import json
     from diffusers import QwenImagePipeline
+    from accelerate import Accelerator
 
-    device = torch.device("cuda:0")
-    dtype = torch.bfloat16
+    accelerator = Accelerator()
 
-    pipe = QwenImagePipeline.from_pretrained("/data/phd/jinjiachun/ckpt/Qwen/Qwen-Image", torch_dtype=dtype)
-    pipe = pipe.to(device)
+    # device = torch.device("cuda:0")
+    # dtype = torch.bfloat16
+
+    # pipe = QwenImagePipeline.from_pretrained("/data/phd/jinjiachun/ckpt/Qwen/Qwen-Image", torch_dtype=dtype)
+    # pipe = pipe.to(device)
 
     # load json file
     json_path = "/data/phd/jinjiachun/codebase/WISE/data"
-    json_file_names = ["cultural_common_sense.json", "natural_science.json", "spatio-temporal_reasoning.json"]
-    prompt_dict = {}
+    json_file_names = ["cultural_common_sense_rewrite.json", "natural_science_rewrite.json", "spatio-temporal_reasoning_rewrite.json"]
     for json_file_name in json_file_names:
         with open(os.path.join(json_path, json_file_name), "r") as f:
             data = json.load(f)
+            # Split data into 8 parts, each GPU processes its own part
+            local_rank = accelerator.local_process_index
+            num_processes = accelerator.num_processes
+            chunk_size = (len(data) + num_processes - 1) // num_processes
+            start_idx = local_rank * chunk_size
+            end_idx = min((local_rank + 1) * chunk_size, len(data))
+            data = data[start_idx:end_idx]
             for item in data:
                 prompt = item["Prompt"]
+                prompt_neg = [" "]
                 prompt_id = item["prompt_id"]
-                prompt_dict[prompt_id] = prompt
-    
-    for prompt_id, prompt in prompt_dict.items():
-        prompt_embeds, prompt_embeds_mask = encode(prompt, pipe.text_encoder)
-        prompt_neg = [" "]
-        prompt_embeds_neg, prompt_embeds_mask_neg = pipe._get_qwen_prompt_embeds(
-            prompt                = prompt_neg,
-            device                = device,
-        )
+                print(prompt_id, prompt)
+            exit(0)
 
-        image = pipe(
-            prompt_embeds               = prompt_embeds,
-            prompt_embeds_mask          = prompt_embeds_mask,
-            negative_prompt_embeds      = prompt_embeds_neg,
-            negative_prompt_embeds_mask = prompt_embeds_mask_neg,
-            true_cfg_scale              = 5.0,
-            num_inference_steps         = 50,
-            height                      = 1024,
-            width                       = 1024,
-        ).images[0]
+                # prompt_embeds, prompt_embeds_mask = encode([prompt], pipe.text_encoder)
 
-        image.save(f"/data/phd/jinjiachun/codebase/qimagined-goggles/asset/wise_generation/{prompt_id}.png")
+                # prompt_embeds_neg, prompt_embeds_mask_neg = pipe._get_qwen_prompt_embeds(
+                #     prompt                = prompt_neg,
+                #     device                = device,
+                # )
+
+                # image = pipe(
+                #     prompt_embeds               = prompt_embeds,
+                #     prompt_embeds_mask          = prompt_embeds_mask,
+                #     negative_prompt_embeds      = prompt_embeds_neg,
+                #     negative_prompt_embeds_mask = prompt_embeds_mask_neg,
+                #     true_cfg_scale              = 5.0,
+                #     num_inference_steps         = 50,
+                #     height                      = 512,
+                #     width                       = 512,
+                # ).images[0]
+
+                # image.save(f"/data/phd/jinjiachun/codebase/qimagined-goggles/asset/wise_generation/{prompt_id}.png")
 
 
 if __name__ == "__main__":
