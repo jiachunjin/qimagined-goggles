@@ -163,48 +163,70 @@ def generate_wise_images_qwen_max_generation():
     import os
     import json
     from diffusers import QwenImagePipeline
+    from accelerate import Accelerator
 
-    device = torch.device("cuda:0")
+    accelerator = Accelerator()
     dtype = torch.bfloat16
 
+    # 加载模型到当前GPU
     pipe = QwenImagePipeline.from_pretrained("/data/phd/jinjiachun/ckpt/Qwen/Qwen-Image", torch_dtype=dtype)
-    pipe = pipe.to(device, dtype)
+    pipe = pipe.to(accelerator.device, dtype)
 
     path = "/data/phd/jinjiachun/codebase/qimagined-goggles/data"
-    json_file_names = ["culture.jsonl", "spatio.jsonl", "science.jsonl"]
-
-    idx = 1
-
+    json_file_names = ["correct_culture.jsonl", "correct_spatio.jsonl", "correct_science.jsonl"]
+    
+    # 收集所有数据
+    all_data = []
     for json_file_name in json_file_names:
         file_path = os.path.join(path, json_file_name)
         with open(file_path, "r") as f:
             for line in f:
                 data = json.loads(line)
-                response = data["response"]["body"]["choices"][0]["message"]["content"]
+                pid = int(data["prompt_id"])
+                if json_file_name == "correct_culture.jsonl":
+                    pid += 0
+                elif json_file_name == "correct_spatio.jsonl":
+                    pid += 400
+                elif json_file_name == "correct_science.jsonl":
+                    pid += 700
+                
+                response = data["assistant_content"]
                 prompt = response.split("{")[1].split("}")[0]
-                prompt_neg = [" "]
-                print(idx, prompt)
-                idx += 1
+                all_data.append((pid, prompt))
+    
+    # 多卡并行处理：每个GPU处理一部分数据
+    local_rank = accelerator.local_process_index
+    num_processes = accelerator.num_processes
+    chunk_size = (len(all_data) + num_processes - 1) // num_processes
+    start_idx = local_rank * chunk_size
+    end_idx = min((local_rank + 1) * chunk_size, len(all_data))
+    local_data = all_data[start_idx:end_idx]
+    
+    print(f"GPU {local_rank}: 处理 {len(local_data)} 个样本 (索引 {start_idx}-{end_idx-1})")
+    
+    for pid, prompt in local_data:
+        prompt_neg = [" "]
+        print(f"GPU {local_rank}: {pid} - {prompt}")
 
-                prompt_embeds, prompt_embeds_mask = encode([prompt], pipe.text_encoder)
+        prompt_embeds, prompt_embeds_mask = encode([prompt], pipe.text_encoder)
 
-                prompt_embeds_neg, prompt_embeds_mask_neg = pipe._get_qwen_prompt_embeds(
-                    prompt                = prompt_neg,
-                    device                = device,
-                )
+        prompt_embeds_neg, prompt_embeds_mask_neg = pipe._get_qwen_prompt_embeds(
+            prompt                = prompt_neg,
+            device                = accelerator.device,
+        )
 
-                image = pipe(
-                    prompt_embeds               = prompt_embeds,
-                    prompt_embeds_mask          = prompt_embeds_mask,
-                    negative_prompt_embeds      = prompt_embeds_neg,
-                    negative_prompt_embeds_mask = prompt_embeds_mask_neg,
-                    true_cfg_scale              = 5.0,
-                    num_inference_steps         = 50,
-                    height                      = 512,
-                    width                       = 512,
-                ).images[0]
+        image = pipe(
+            prompt_embeds               = prompt_embeds,
+            prompt_embeds_mask          = prompt_embeds_mask,
+            negative_prompt_embeds      = prompt_embeds_neg,
+            negative_prompt_embeds_mask = prompt_embeds_mask_neg,
+            true_cfg_scale              = 5.0,
+            num_inference_steps         = 50,
+            height                      = 512,
+            width                       = 512,
+        ).images[0]
 
-                image.save(f"/data/phd/jinjiachun/codebase/qimagined-goggles/asset/wise_generation_rewrite_qwen_max/{idx}.png")
+        image.save(f"/data/phd/jinjiachun/codebase/qimagined-goggles/asset/wise_generation_rewrite_qwen_max/{pid}.png")
 
 
 if __name__ == "__main__":
