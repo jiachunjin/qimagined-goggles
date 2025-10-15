@@ -1,7 +1,7 @@
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForImageTextToText, AutoTokenizer
 
-qwenvl = AutoModelForCausalLM.from_pretrained("/data/phd/jinjiachun/ckpt/Qwen/Qwen3-VL-8B-Instruct")
+qwenvl = AutoModelForImageTextToText.from_pretrained("/data/phd/jinjiachun/ckpt/Qwen/Qwen3-VL-8B-Instruct")
 tokenizer = AutoTokenizer.from_pretrained("/data/phd/jinjiachun/ckpt/Qwen/Qwen3-VL-8B-Instruct")
 device = torch.device("cuda:0")
 qwenvl = qwenvl.to(device)
