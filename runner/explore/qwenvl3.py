@@ -32,23 +32,10 @@ Below is the Prompt to be rewritten. Please directly expand and refine it, even 
 original_prompt = original_prompt.strip()
 prompt = f"{SYSTEM_PROMPT}\n\nUser Input: {original_prompt}\n\n Rewritten Prompt:"
 prompt = [prompt]
-# success=False
-# while not success:
-#     try:
-#         polished_prompt = api(prompt, model='qwen-plus')
-#         polished_prompt = polished_prompt.strip()
-#         polished_prompt = polished_prompt.replace("\n", " ")
-#         success = True
-#     except Exception as e:
-#         print(f"Error during API call: {e}")
-# return polished_prompt + magic_prompt
-
-
 template = "<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n<|im_start|>user\n{}<|im_end|>\n<|im_start|>assistant\n"
-# template = "<|im_start|>system\n你是Qwen 2.5 VL, 你现在拥有了图像生成和编辑能力。Describe the image by detailing the color, shape, size, texture, quantity, text, spatial relationships of the objects and background:<|im_end|>\n<|im_start|>user\n{}<|im_end|>\n<|im_start|>assistant\n"
-# drop_idx = 53
+
 txt = [template.format(e) for e in prompt]
-print(txt)
+
 txt_tokens = tokenizer(
     txt, max_length=10240, padding=True, truncation=True, return_tensors="pt"
 ).to(device)
@@ -67,5 +54,5 @@ generated_ids_trimmed = [
 ]
 output_text = tokenizer.batch_decode(
     generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
-)
-print("生成的文本:", output_text)
+) + magic_prompt
+print("final prompt: \n", output_text)
