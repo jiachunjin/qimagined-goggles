@@ -33,40 +33,58 @@ Below is the Prompt to be rewritten. Please directly expand and refine it, even 
 
 json_path = "/data/phd/jinjiachun/codebase/WISE/data"
 json_file_names = ["cultural_common_sense.json", "natural_science.json", "spatio-temporal_reasoning.json"]
-for json_file_name in json_file_names:
-    with open(os.path.join(json_path, json_file_name), "r") as f:
-        data = json.load(f)
-        for item in data:
-            prompt = item["Prompt"]
-            prompt_id = item["prompt_id"]
-            print(prompt_id, prompt)
 
-# original_prompt = "Traditional food of the Mid-Autumn Festival"
+# 创建统一的输出文件
+output_path = os.path.join(json_path, "all_rewritten_prompts.jsonl")
 
-# original_prompt = original_prompt.strip()
-# prompt = f"{SYSTEM_PROMPT}\n\nUser Input: {original_prompt}\n\n Rewritten Prompt:"
-# prompt = [prompt]
-# template = "<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n<|im_start|>user\n{}<|im_end|>\n<|im_start|>assistant\n"
+# 打开输出文件进行写入
+with open(output_path, "w", encoding="utf-8") as output_f:
+    for json_file_name in json_file_names:
+        with open(os.path.join(json_path, json_file_name), "r") as f:
+            data = json.load(f)
+            
+            for item in data:
+                prompt = item["Prompt"]
+                prompt_id = item["prompt_id"]
+                # print(prompt_id, prompt)
 
-# txt = [template.format(e) for e in prompt]
+                original_prompt = prompt
 
-# txt_tokens = tokenizer(
-#     txt, max_length=10240, padding=True, truncation=True, return_tensors="pt"
-# ).to(device)
+                original_prompt = original_prompt.strip()
+                prompt = f"{SYSTEM_PROMPT}\n\nUser Input: {original_prompt}\n\n Rewritten Prompt:"
+                prompt = [prompt]
+                template = "<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n<|im_start|>user\n{}<|im_end|>\n<|im_start|>assistant\n"
 
-# generation_output = qwenvl.generate(
-#     **txt_tokens, 
-#     max_new_tokens=512,
-#     output_hidden_states=True,
-#     return_dict_in_generate=True,
-#     output_scores=True
-# )
+                txt = [template.format(e) for e in prompt]
 
-# generated_ids = generation_output.sequences
-# generated_ids_trimmed = [
-#     out_ids[len(in_ids) :] for in_ids, out_ids in zip(txt_tokens.input_ids, generated_ids)
-# ]
-# output_text = tokenizer.batch_decode(
-#     generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
-# )[0].strip() + magic_prompt
-# print("final prompt: \n", output_text)
+                txt_tokens = tokenizer(
+                    txt, max_length=10240, padding=True, truncation=True, return_tensors="pt"
+                ).to(device)
+
+                generation_output = qwenvl.generate(
+                    **txt_tokens, 
+                    max_new_tokens=512,
+                    output_hidden_states=True,
+                    return_dict_in_generate=True,
+                    output_scores=True
+                )
+
+                generated_ids = generation_output.sequences
+                generated_ids_trimmed = [
+                    out_ids[len(in_ids) :] for in_ids, out_ids in zip(txt_tokens.input_ids, generated_ids)
+                ]
+                output_text = tokenizer.batch_decode(
+                    generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
+                )[0].strip() + magic_prompt
+                
+                # 创建要写入的数据
+                output_data = {
+                    "prompt_id": prompt_id,
+                    "output_text": output_text
+                }
+                
+                # 写入JSONL文件
+                output_f.write(json.dumps(output_data, ensure_ascii=False) + "\n")
+                print(f"{prompt_id}: {output_text}")
+
+print(f"所有数据已保存到: {output_path}")
