@@ -75,7 +75,9 @@ with open(output_path, "w", encoding="utf-8") as output_f:
                 ]
                 output_text = tokenizer.batch_decode(
                     generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
-                )[0].strip() + magic_prompt
+                )[0].strip()
+                output_text = output_text.replace("\n", " ")
+                output_text = output_text + magic_prompt
                 
                 # 创建要写入的数据
                 output_data = {
