@@ -60,3 +60,12 @@ generation_output = qwenvl.generate(
     return_dict_in_generate=True,
     output_scores=True
 )
+
+generated_ids = generation_output.sequences
+generated_ids_trimmed = [
+    out_ids[len(in_ids) :] for in_ids, out_ids in zip(txt_tokens.input_ids, generated_ids)
+]
+output_text = tokenizer.batch_decode(
+    generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
+)
+print("生成的文本:", output_text)
