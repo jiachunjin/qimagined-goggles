@@ -54,5 +54,5 @@ generated_ids_trimmed = [
 ]
 output_text = tokenizer.batch_decode(
     generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
-)[0] + magic_prompt
+)[0].strip() + magic_prompt
 print("final prompt: \n", output_text)
