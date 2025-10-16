@@ -259,7 +259,7 @@ def generate_wise_images_qwen3vl_rewrite():
             for line in f:
                 data = json.loads(line)  # JSONL格式：每行一个JSON对象
                 pid = int(data["prompt_id"])
-                response = data["Prompt"]
+                response = data["output_text"]
                 all_data.append((pid, response))
     
     # 多卡并行处理：每个GPU处理一部分数据
