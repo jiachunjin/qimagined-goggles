@@ -267,9 +267,9 @@ def generate_wise_images_qwen3vl_rewrite():
     
     print(f"GPU {local_rank}: 处理 {len(local_data)} 个样本 (索引 {start_idx}-{end_idx-1})")
     
-    # for pid, prompt in local_data:
-    #     prompt_neg = [" "]
-    #     print(f"GPU {local_rank}: {pid} - {prompt}")
+    for pid, prompt in local_data:
+        prompt_neg = [" "]
+        print(f"GPU {local_rank}: {pid} - {prompt}")
 
     #     prompt_embeds, prompt_embeds_mask = encode([prompt], pipe.text_encoder)
 
