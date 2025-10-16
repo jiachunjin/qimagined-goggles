@@ -244,7 +244,7 @@ def generate_wise_images_qwen3vl_rewrite():
     pipe = pipe.to(accelerator.device, dtype)
 
     path = "/data/phd/jinjiachun/codebase/WISE/data"
-    json_file_names = ["cultural_common_sense_qwenvlmaxrewritten.json", "natural_science_qwenvlmaxrewritten.json", "spatio-temporal_reasoning_qwenvlmaxrewritten.json"]
+    json_file_names = ["all_rewritten_prompts_original_qwenimage_text_encoder.jsonl"]
     
     # 收集所有数据
     all_data = []
@@ -289,7 +289,7 @@ def generate_wise_images_qwen3vl_rewrite():
             width                       = 512,
         ).images[0]
 
-        image.save(f"/data/phd/jinjiachun/codebase/qimagined-goggles/asset/qwenmax/{pid}.png")
+        image.save(f"/data/phd/jinjiachun/codebase/qimagined-goggles/asset/qwenvl2_5vl/{pid}.png")
 
 if __name__ == "__main__":
     generate_wise_images_qwen3vl_rewrite()
