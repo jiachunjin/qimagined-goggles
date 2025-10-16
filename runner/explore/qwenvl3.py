@@ -3,8 +3,10 @@ import json
 import torch
 from transformers import AutoModelForImageTextToText, AutoTokenizer
 
-qwenvl = AutoModelForImageTextToText.from_pretrained("/data/phd/jinjiachun/ckpt/Qwen/Qwen3-VL-8B-Instruct")
-tokenizer = AutoTokenizer.from_pretrained("/data/phd/jinjiachun/ckpt/Qwen/Qwen3-VL-8B-Instruct")
+# qwenvl = AutoModelForImageTextToText.from_pretrained("/data/phd/jinjiachun/ckpt/Qwen/Qwen3-VL-8B-Instruct")
+# tokenizer = AutoTokenizer.from_pretrained("/data/phd/jinjiachun/ckpt/Qwen/Qwen3-VL-8B-Instruct")
+qwenvl = AutoModelForImageTextToText.from_pretrained("/data/phd/jinjiachun/ckpt/Qwen/Qwen-Image/text_encoder")
+tokenizer = AutoTokenizer.from_pretrained("/data/phd/jinjiachun/ckpt/Qwen/Qwen-Image/text_encoder")
 device = torch.device("cuda:0")
 qwenvl = qwenvl.to(device)
 qwenvl.eval()
@@ -35,7 +37,7 @@ json_path = "/data/phd/jinjiachun/codebase/WISE/data"
 json_file_names = ["cultural_common_sense.json", "natural_science.json", "spatio-temporal_reasoning.json"]
 
 # 创建统一的输出文件
-output_path = os.path.join(json_path, "all_rewritten_prompts.jsonl")
+output_path = os.path.join(json_path, "all_rewritten_prompts_original_qwenimage_text_encoder.jsonl")
 
 # 打开输出文件进行写入
 with open(output_path, "w", encoding="utf-8") as output_f:
