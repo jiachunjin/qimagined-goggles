@@ -251,10 +251,10 @@ def generate_wise_images_qwen3vl_rewrite():
     for json_file_name in json_file_names:
         file_path = os.path.join(path, json_file_name)
         with open(file_path, "r") as f:
-            for line in f:
-                data = json.loads(line)
-                pid = int(data["prompt_id"])
-                response = data["Prompt"]
+            data = json.load(f)  # 使用json.load()而不是json.loads()逐行解析
+            for item in data:
+                pid = int(item["prompt_id"])
+                response = item["Prompt"]
                 all_data.append((pid, response))
     
     # 多卡并行处理：每个GPU处理一部分数据
