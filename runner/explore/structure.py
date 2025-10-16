@@ -240,8 +240,8 @@ def generate_wise_images_qwen3vl_rewrite():
     dtype = torch.bfloat16
 
     # 加载模型到当前GPU
-    # pipe = QwenImagePipeline.from_pretrained("/data/phd/jinjiachun/ckpt/Qwen/Qwen-Image", torch_dtype=dtype)
-    # pipe = pipe.to(accelerator.device, dtype)
+    pipe = QwenImagePipeline.from_pretrained("/data/phd/jinjiachun/ckpt/Qwen/Qwen-Image", torch_dtype=dtype)
+    pipe = pipe.to(accelerator.device, dtype)
 
     path = "/data/phd/jinjiachun/codebase/WISE/data"
     json_file_names = ["all_rewritten_prompts.jsonl"]
@@ -271,25 +271,25 @@ def generate_wise_images_qwen3vl_rewrite():
         prompt_neg = [" "]
         print(f"GPU {local_rank}: {pid} - {prompt}")
 
-        # prompt_embeds, prompt_embeds_mask = encode([prompt], pipe.text_encoder)
+        prompt_embeds, prompt_embeds_mask = encode([prompt], pipe.text_encoder)
 
-        # prompt_embeds_neg, prompt_embeds_mask_neg = pipe._get_qwen_prompt_embeds(
-        #     prompt                = prompt_neg,
-        #     device                = accelerator.device,
-        # )
+        prompt_embeds_neg, prompt_embeds_mask_neg = pipe._get_qwen_prompt_embeds(
+            prompt                = prompt_neg,
+            device                = accelerator.device,
+        )
 
-        # image = pipe(
-        #     prompt_embeds               = prompt_embeds,
-        #     prompt_embeds_mask          = prompt_embeds_mask,
-        #     negative_prompt_embeds      = prompt_embeds_neg,
-        #     negative_prompt_embeds_mask = prompt_embeds_mask_neg,
-        #     true_cfg_scale              = 5.0,
-        #     num_inference_steps         = 50,
-        #     height                      = 512,
-        #     width                       = 512,
-        # ).images[0]
+        image = pipe(
+            prompt_embeds               = prompt_embeds,
+            prompt_embeds_mask          = prompt_embeds_mask,
+            negative_prompt_embeds      = prompt_embeds_neg,
+            negative_prompt_embeds_mask = prompt_embeds_mask_neg,
+            true_cfg_scale              = 5.0,
+            num_inference_steps         = 50,
+            height                      = 512,
+            width                       = 512,
+        ).images[0]
 
-        # image.save(f"/data/phd/jinjiachun/codebase/qimagined-goggles/asset/qwen3vl/{pid}.png")
+        image.save(f"/data/phd/jinjiachun/codebase/qimagined-goggles/asset/qwen3vl/{pid}.png")
 
 if __name__ == "__main__":
     generate_wise_images_qwen3vl_rewrite()
