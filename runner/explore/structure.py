@@ -296,8 +296,56 @@ def generate_wise_images_qwen3vl_rewrite():
 
         image.save(f"/data/phd/jinjiachun/codebase/qimagined-goggles/asset/qwenvl2_5vl/{pid}.png")
 
+@torch.no_grad()
+def generate_qwenvl_new_system_prompt():
+    import os
+    import json
+    from diffusers import QwenImagePipeline
+    from accelerate import Accelerator
+
+    accelerator = Accelerator()
+    dtype = torch.bfloat16
+
+    # 加载模型到当前GPU
+    # pipe = QwenImagePipeline.from_pretrained("/data/phd/jinjiachun/ckpt/Qwen/Qwen-Image", torch_dtype=dtype)
+    # pipe = pipe.to(accelerator.device, dtype)
+
+    local_rank = accelerator.local_process_index
+    path = f"/data/phd/jinjiachun/codebase/WISE/data/qwenvl_new_system_prompt_{local_rank}.jsonl"
+
+    with open(path, "r") as f:
+        for line in f:
+            data = json.loads(line)  # JSONL格式：每行一个JSON对象
+            pid = int(data["prompt_id"])
+            response = data["output_text"]
+            prompt = response.split("{")[1].split("}")[0]
+
+            prompt_neg = [" "]
+            print(f"GPU {local_rank}: {pid} - {prompt}")
+
+            # prompt_embeds, prompt_embeds_mask = encode([prompt], pipe.text_encoder)
+
+            # prompt_embeds_neg, prompt_embeds_mask_neg = pipe._get_qwen_prompt_embeds(
+            #     prompt                = prompt_neg,
+            #     device                = accelerator.device,
+            # )
+
+            # image = pipe(
+            #     prompt_embeds               = prompt_embeds,
+            #     prompt_embeds_mask          = prompt_embeds_mask,
+            #     negative_prompt_embeds      = prompt_embeds_neg,
+            #     negative_prompt_embeds_mask = prompt_embeds_mask_neg,
+            #     true_cfg_scale              = 5.0,
+            #     num_inference_steps         = 50,
+            #     height                      = 512,
+            #     width                       = 512,
+            # ).images[0]
+
+            # image.save(f"/data/phd/jinjiachun/codebase/qimagined-goggles/asset/qwenvl2_5vl_new_system_prompt/{pid}.png")
+
+
 if __name__ == "__main__":
-    generate_wise_images_qwen3vl_rewrite()
+    generate_qwenvl_new_system_prompt()
     # generate_wise_images_qwen_max_generation()
     # generate_wise_images()
     # complete_pipeline()
