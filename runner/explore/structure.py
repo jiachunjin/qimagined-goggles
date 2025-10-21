@@ -317,6 +317,9 @@ def generate_qwenvl_new_system_prompt():
         for line in f:
             data = json.loads(line)  # JSONL格式：每行一个JSON对象
             pid = int(data["prompt_id"])
+            save_name = f"/data/phd/jinjiachun/codebase/qimagined-goggles/asset/qwenvl2_5vl_new_system_prompt/{pid}.png"
+            if os.path.exists(save_name):
+                continue
             response = data["output_text"]
             prompt = response.split("{")[1].split("}")[0]
 
@@ -341,7 +344,7 @@ def generate_qwenvl_new_system_prompt():
                 width                       = 512,
             ).images[0]
 
-            image.save(f"/data/phd/jinjiachun/codebase/qimagined-goggles/asset/qwenvl2_5vl_new_system_prompt/{pid}.png")
+            image.save(save_name)
 
 
 if __name__ == "__main__":
