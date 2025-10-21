@@ -33,9 +33,6 @@ Revised Prompt: {A bright red latex helium balloon, now partially deflated and c
 json_path = "/data/phd/jinjiachun/codebase/WISE/data"
 json_file_names = ["cultural_common_sense.json", "natural_science.json", "spatio-temporal_reasoning.json"]
 
-# 创建统一的输出文件
-output_path = os.path.join(json_path, "qwenvl_new_system_prompt.jsonl")
-
 # 首先收集所有数据
 all_data = []
 for json_file_name in json_file_names:
@@ -47,6 +44,8 @@ for json_file_name in json_file_names:
 local_rank = accelerator.local_process_index
 num_processes = accelerator.num_processes
 total_data = len(all_data)
+
+output_path = os.path.join(json_path, f"qwenvl_new_system_prompt_{local_rank}.jsonl")
 
 # 计算每个进程应该处理的数据范围
 # 使用更均匀的分配方式，确保所有数据都被处理
