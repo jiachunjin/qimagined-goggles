@@ -369,7 +369,8 @@ def generate_qwenmax_new_system_prompt():
             data = json.loads(line)
             pid = int(data["prompt_id"])
             response = data["output_text"]
-            all_data.append((pid, response))
+            prompt = response.split("{")[1].split("}")[0]
+            all_data.append((pid, prompt))
     local_rank = accelerator.local_process_index
     num_processes = accelerator.num_processes
     chunk_size = (len(all_data) + num_processes - 1) // num_processes
