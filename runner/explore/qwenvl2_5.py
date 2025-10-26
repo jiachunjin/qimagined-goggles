@@ -16,7 +16,7 @@ qwenvl = qwenvl.to(device)
 qwenvl.eval()
 
 json_path = "/data/phd/jinjiachun/codebase/WISE/data"
-json_file_names = ["cultural_common_sense.json", "natural_science.json", "spatio-temporal_reasoning.json"]
+json_file_names = ["cultural_common_sense.json"]
 
 # 首先收集所有数据
 all_data = []
@@ -63,3 +63,4 @@ for item in data:
     output_text = output_text
 
     print(output_text)
+    print("="*20)
