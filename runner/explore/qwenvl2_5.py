@@ -5,7 +5,7 @@ from transformers import AutoModelForImageTextToText, AutoTokenizer
 from accelerate import Accelerator
 
 qwenvl = AutoModelForImageTextToText.from_pretrained("/data/phd/kousiqi/yugang/LLaMA-Factory/saves/qwen2_5vl-7b/full/sft_0.5_raw")
-tokenizer = AutoTokenizer.from_pretrained("/data/phd/kousiqi/yugang/LLaMA-Factory/saves/qwen2_5vl-7bfullsft_0.5_raw")
+tokenizer = AutoTokenizer.from_pretrained("/data/phd/kousiqi/yugang/LLaMA-Factory/saves/qwen2_5vl-7b/full/sft_0.5_raw")
 
 
 
